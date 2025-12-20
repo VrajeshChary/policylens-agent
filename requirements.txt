@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 google-cloud-storage>=2.10.0
@@ -10,18 +9,4 @@ pandas>=2.1.0
 python-dotenv>=1.0.0
 pytest>=7.4.0
 httpx>=0.25.0
-
-=======
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-google-cloud-storage>=2.10.0
-google-cloud-aiplatform>=1.38.0
-pydantic>=2.5.0
-python-multipart>=0.0.6
-pypdf2>=3.0.1
-pandas>=2.1.0
-python-dotenv>=1.0.0
-pytest>=7.4.0
-httpx>=0.25.0
-
->>>>>>> 46c1933 (Initial commit)
+google-genai

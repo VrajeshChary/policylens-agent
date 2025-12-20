@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
@@ -42,6 +41,21 @@
         },
     }
 </script>
+<style>
+  /* Loading Spinner */
+  .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #4285F4;
+    animation: spin 1s ease infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
 </head>
 <body class="font-display bg-background-light dark:bg-background-dark text-[#202124] dark:text-white overflow-x-hidden transition-colors duration-300">
 <div class="fixed inset-0 -z-10 h-full w-full overflow-hidden pointer-events-none">
@@ -97,24 +111,26 @@
 <div class="flex w-full flex-col gap-5 sm:flex-row sm:justify-center">
 <button 
 onclick="document.getElementById('policyPdfInput').click()"
+id="uploadPolicyBtn"
 class="group relative flex h-auto min-h-[160px] flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-transparent bg-primary p-6 text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1 hover:bg-blue-600 hover:shadow-blue-500/30 sm:max-w-[280px]">
 <div class="rounded-full bg-white/20 p-4 transition-transform group-hover:scale-110">
 <span class="material-symbols-outlined text-3xl">description</span>
 </div>
 <div class="flex flex-col gap-1">
 <span class="text-lg font-bold">Upload Policy PDF</span>
-<span class="text-xs font-medium text-blue-100 opacity-90">Drag &amp; drop supported</span>
+<span id="policyFileName" class="text-xs font-medium text-blue-100 opacity-90">Drag &amp; drop supported</span>
 </div>
 </button>
 <button 
 onclick="document.getElementById('demographicInput').click()"
+id="uploadDemogBtn"
 class="group relative flex h-auto min-h-[160px] flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-100 bg-white p-6 text-[#202124] shadow-lg transition-all hover:-translate-y-1 hover:border-g-green hover:shadow-xl dark:border-white/10 dark:bg-[#303134] dark:text-white dark:hover:border-g-green sm:max-w-[280px]">
 <div class="rounded-full bg-green-50 p-4 text-g-green transition-transform group-hover:scale-110 dark:bg-g-green/20 dark:text-green-300">
 <span class="material-symbols-outlined text-3xl">table_view</span>
 </div>
 <div class="flex flex-col gap-1">
 <span class="text-lg font-bold">Upload Demographic Data</span>
-<span class="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-g-green dark:group-hover:text-green-300 transition-colors">.csv, .xlsx formats</span>
+<span id="demogFileName" class="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-g-green dark:group-hover:text-green-300 transition-colors">.csv, .xlsx formats</span>
 </div>
 </button>
 
@@ -142,7 +158,7 @@ class="group relative flex h-auto min-h-[160px] flex-1 flex-col items-center jus
   class="hidden"
 />
 
-<div class="mt-12 flex justify-center">
+<div class="mt-12 flex flex-col items-center justify-center gap-6">
     <button
       id="analyzeBtn"
       class="group relative inline-flex items-center gap-3 rounded-full
@@ -153,211 +169,161 @@ class="group relative flex h-auto min-h-[160px] flex-1 flex-col items-center jus
              hover:-translate-y-0.5 hover:bg-blue-600 hover:shadow-blue-500/50
              focus:outline-none focus:ring-4 focus:ring-primary/30
              disabled:cursor-not-allowed disabled:opacity-50"
+      disabled
     >
       <span class="material-symbols-outlined text-xl transition-transform group-hover:scale-110">
         auto_graph
       </span>
       Analyse
     </button>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="hidden flex flex-col items-center gap-2">
+      <div class="spinner"></div>
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Analyzing policy impact...</p>
+    </div>
   </div>
 
 
+<!-- Results Section -->
+<div id="results" class="hidden w-full max-w-4xl mt-12 bg-white dark:bg-[#202124] rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-white/10">
+    <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
+    <div class="grid gap-6">
+
+        <!-- Summary -->
+        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+            <h3 class="font-semibold text-blue-800 dark:text-blue-300 mb-2">Executive Summary</h3>
+            <p id="reasoningSummary" class="text-gray-700 dark:text-gray-300"></p>
+        </div>
+
+        <!-- Affected Groups -->
+        <div>
+            <h3 class="font-semibold mb-3">Affected Groups</h3>
+            <div id="affectedGroupsList" class="space-y-3"></div>
+        </div>
+
+        <!-- Mitigations -->
+        <div>
+            <h3 class="font-semibold mb-3">Recommendations</h3>
+            <ul id="mitigationsList" class="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300"></ul>
+        </div>
+    </div>
+</div>
+
 </main>
 <footer class="w-full py-8 text-center border-t border-gray-100 dark:border-white/5 mt-auto bg-surface-light dark:bg-[#202124]">
 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
-    
-    
         </p>
 </footer>
 </div>
 <script>
-    document.getElementById("policyPdfInput").addEventListener("change", function () {
-      if (this.files.length > 0) {
-        console.log("Policy PDF selected:", this.files[0]);
-      }
-    });
-  
-    document.getElementById("demographicInput").addEventListener("change", function () {
-      if (this.files.length > 0) {
-        console.log("Demographic file selected:", this.files[0]);
-      }
-    });
-  </script>
-<!-- 
-<script>
+    const policyInput = document.getElementById("policyPdfInput");
+    const demogInput = document.getElementById("demographicInput");
     const analyzeBtn = document.getElementById("analyzeBtn");
-    analyzeBtn.disabled = true;
-  
-    function enableAnalyze() {
-      analyzeBtn.disabled = false;
+    const loadingDiv = document.getElementById("loading");
+    const resultsDiv = document.getElementById("results");
+
+    function checkFiles() {
+        if (policyInput.files.length > 0) {
+            analyzeBtn.disabled = false;
+        } else {
+            analyzeBtn.disabled = true;
+        }
     }
-  
-    // Call enableAnalyze() after files are selected
-  </script>
-   -->
-  
-=======
-<!DOCTYPE html>
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 
-<!-- Favicon -->
-<link rel="icon" href="policy lens.png" type="image/x-icon">
-
-<link rel="icon" type="image/png" sizes="32x32" href="policy lens.png">
-<link rel="icon" type="image/png" sizes="16x16" href="policy lens.png">
-
-<link rel="apple-touch-icon" sizes="180x180" href="policy lens.png">
-
-
-<title>PolicyLens - Intelligent Analysis</title>
-
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-    tailwind.config = {
-        darkMode: "class",
-        theme: {
-            extend: {
-                colors: {
-                    "primary": "#4285F4", // Google Blue
-                    "g-red": "#EA4335",   // Google Red
-                    "g-yellow": "#FBBC05", // Google Yellow
-                    "g-green": "#34A853", // Google Green
-                    "background-light": "#ffffff",
-                    "background-dark": "#202124",
-                    "surface-light": "#f8f9fa",
-                },
-                fontFamily: {
-                    "display": ["Inter", "sans-serif"]
-                },
-                borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "3xl": "2.5rem", "full": "9999px"},
-            },
-        },
-    }
-</script>
-</head>
-<body class="font-display bg-background-light dark:bg-background-dark text-[#202124] dark:text-white overflow-x-hidden transition-colors duration-300">
-<div class="fixed inset-0 -z-10 h-full w-full overflow-hidden pointer-events-none">
-<div class="absolute -top-[10%] -left-[10%] h-[50vh] w-[50vh] rounded-full bg-primary/20 blur-[120px] dark:bg-primary/10"></div>
-<div class="absolute top-[10%] right-[10%] h-[40vh] w-[40vh] rounded-full bg-g-red/15 blur-[100px] dark:bg-g-red/10"></div>
-<div class="absolute bottom-[20%] left-[10%] h-[40vh] w-[40vh] rounded-full bg-g-yellow/15 blur-[100px] dark:bg-g-yellow/10"></div>
-<div class="absolute -bottom-[10%] right-[20%] h-[50vh] w-[50vh] rounded-full bg-g-green/15 blur-[120px] dark:bg-g-green/10"></div>
-</div>
-<div class="relative flex min-h-screen flex-col">
-<header class="w-full px-6 py-5 lg:px-12 sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-[#202124]/80 border-b border-gray-100 dark:border-white/10">
-<div class="mx-auto flex max-w-7xl items-center justify-between">
-<div class="flex items-center gap-2.5">
-<div class="flex h-10 w-10 items-center justify-center rounded-xl  text-white shadow-sm">
-    <img
-    src="policy lens.png"
-    alt="PolicyLens"
-    class="h-10 w-10"
-  >
-</div>
-<h2 class="text-2xl font-bold tracking-tight text-[#202124] dark:text-white">
-<span >PolicyLens</span>
-                </h2>
-</div>
-
-<div class="flex items-center gap-4">
-</header>
-<main class="flex flex-1 flex-col items-center justify-center px-4 py-12 lg:px-8">
-<div class="relative w-full max-w-4xl">
-<div class="relative overflow-hidden rounded-3xl border border-white/60 bg-white/60 shadow-[0_8px_32px_0_rgba(66,133,244,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#202124]/60 dark:shadow-none p-8 md:p-12 lg:p-16">
-<div class="absolute top-0 right-0 -mt-10 -mr-10 h-32 w-32 rounded-full bg-gradient-to-br from-g-red/20 to-g-yellow/20 blur-2xl"></div>
-<div class="absolute bottom-0 left-0 -mb-10 -ml-10 h-32 w-32 rounded-full bg-gradient-to-tr from-primary/20 to-g-green/20 blur-2xl"></div>
-<div class="relative z-10 flex flex-col items-center text-center">
-<div class="mb-8 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-gray-200">
-<span class="relative flex h-2.5 w-2.5">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-g-red opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-g-red"></span>
-</span>
-<span>AI-Powered Policy Analysis v2.0</span>
-</div>
-<h1 class="mb-6 max-w-3xl text-4xl font-black tracking-tighter text-[#202124] dark:text-white sm:text-5xl md:text-6xl lg:leading-tight">
-                        Intelligent 
-                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-g-red/80 via-g-yellow/80 via-primary/60 via-g-green/80 to-primary/60 dark:from-red-300 dark:via-yellow-300 dark:via-blue-300 dark:via-green-300 dark:to-blue-300 font-bold text-4xl sm:text-5xl md:text-6xl lg:leading-tight">
-
-
-  PolicyLens
-</span>
-
-                        Insights
-                    </h1>
-<p class="mb-10 max-w-xl text-lg text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
-                        Transform raw policy documents into actionable insights in seconds. Securely upload your datasets below to start processing.
-                    </p>
-<div class="flex w-full flex-col gap-5 sm:flex-row sm:justify-center">
-<button 
-onclick="document.getElementById('policyPdfInput').click()"
-class="group relative flex h-auto min-h-[160px] flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-transparent bg-primary p-6 text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1 hover:bg-blue-600 hover:shadow-blue-500/30 sm:max-w-[280px]">
-<div class="rounded-full bg-white/20 p-4 transition-transform group-hover:scale-110">
-<span class="material-symbols-outlined text-3xl">description</span>
-</div>
-<div class="flex flex-col gap-1">
-<span class="text-lg font-bold">Upload Policy PDF</span>
-<span class="text-xs font-medium text-blue-100 opacity-90">Drag &amp; drop supported</span>
-</div>
-</button>
-<button 
-onclick="document.getElementById('demographicInput').click()"
-class="group relative flex h-auto min-h-[160px] flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-100 bg-white p-6 text-[#202124] shadow-lg transition-all hover:-translate-y-1 hover:border-g-green hover:shadow-xl dark:border-white/10 dark:bg-[#303134] dark:text-white dark:hover:border-g-green sm:max-w-[280px]">
-<div class="rounded-full bg-green-50 p-4 text-g-green transition-transform group-hover:scale-110 dark:bg-g-green/20 dark:text-green-300">
-<span class="material-symbols-outlined text-3xl">table_view</span>
-</div>
-<div class="flex flex-col gap-1">
-<span class="text-lg font-bold">Upload Demographic Data</span>
-<span class="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-g-green dark:group-hover:text-green-300 transition-colors">.csv, .xlsx formats</span>
-</div>
-</button>
-</div>
-<div class="mt-10 flex items-center gap-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-<div class="flex items-center gap-1.5">
-
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Hidden File Inputs -->
-<input
-  type="file"
-  id="policyPdfInput"
-  accept=".pdf"
-  class="hidden"
-/>
-
-<input
-  type="file"
-  id="demographicInput"
-  accept=".csv,.xlsx"
-  class="hidden"
-/>
-
-</main>
-<footer class="w-full py-8 text-center border-t border-gray-100 dark:border-white/5 mt-auto bg-surface-light dark:bg-[#202124]">
-<p class="text-sm font-medium text-gray-500 dark:text-gray-400">
-        </p>
-</footer>
-</div>
-<script>
-    document.getElementById("policyPdfInput").addEventListener("change", function () {
+    policyInput.addEventListener("change", function () {
       if (this.files.length > 0) {
-        console.log("Policy PDF selected:", this.files[0]);
+        document.getElementById("policyFileName").textContent = this.files[0].name;
+        checkFiles();
       }
     });
   
-    document.getElementById("demographicInput").addEventListener("change", function () {
+    demogInput.addEventListener("change", function () {
       if (this.files.length > 0) {
-        console.log("Demographic file selected:", this.files[0]);
+        document.getElementById("demogFileName").textContent = this.files[0].name;
       }
     });
+
+    analyzeBtn.addEventListener("click", async () => {
+        if (!policyInput.files[0]) return;
+
+        // UI Updates
+        analyzeBtn.classList.add("hidden");
+        loadingDiv.classList.remove("hidden");
+        resultsDiv.classList.add("hidden");
+
+        const formData = new FormData();
+        formData.append("policy_file", policyInput.files[0]);
+
+        if (demogInput.files[0]) {
+            formData.append("demographics_file", demogInput.files[0]);
+        }
+
+        try {
+            const response = await fetch("/analyze", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            // Display Results
+            displayResults(data);
+
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Analysis failed. See console for details.");
+        } finally {
+            loadingDiv.classList.add("hidden");
+            analyzeBtn.classList.remove("hidden");
+        }
+    });
+
+    function displayResults(data) {
+        document.getElementById("reasoningSummary").textContent = data.reasoning_summary || "No summary provided.";
+
+        const groupsList = document.getElementById("affectedGroupsList");
+        groupsList.innerHTML = "";
+
+        if (data.affected_groups) {
+            data.affected_groups.forEach(group => {
+                const el = document.createElement("div");
+                el.className = "flex flex-col sm:flex-row gap-4 p-4 border rounded-xl bg-gray-50 dark:bg-white/5";
+
+                let riskColor = "bg-gray-100 text-gray-800";
+                if (group.risk_level === "High") riskColor = "bg-red-100 text-red-800";
+                if (group.risk_level === "Medium") riskColor = "bg-yellow-100 text-yellow-800";
+                if (group.risk_level === "Low") riskColor = "bg-green-100 text-green-800";
+
+                el.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold">${group.group}</span>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${riskColor}">${group.risk_level}</span>
+                        </div>
+                        <div class="text-sm text-gray-500">Regions: ${group.regions ? group.regions.join(", ") : "N/A"}</div>
+                    </div>
+                `;
+                groupsList.appendChild(el);
+            });
+        }
+
+        const mitList = document.getElementById("mitigationsList");
+        mitList.innerHTML = "";
+        if (data.recommendations) { // backend returns "recommendations" in fallback, but schema says "mitigations"
+             // Wait, let's check agent.py schema. It says "mitigations".
+             // The fallback says "recommendations". I should probably fix fallback to match schema or handle both.
+             // I'll handle both here for robustness.
+             const recs = data.mitigations || data.recommendations || [];
+             recs.forEach(rec => {
+                 const li = document.createElement("li");
+                 li.textContent = rec;
+                 mitList.appendChild(li);
+             });
+        }
+
+        resultsDiv.classList.remove("hidden");
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    }
   </script>
-  
->>>>>>> 46c1933 (Initial commit)
 </body></html>
