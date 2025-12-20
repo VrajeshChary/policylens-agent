@@ -1,10 +1,17 @@
 # PolicyLens Agent
 
-PolicyLens is an autonomous policy impact assessment agent built using Google ADK and Gemini 3. It automates the analysis of policy documents to identify affected populations, assess risk levels, and recommend mitigation strategies.
+PolicyLens is an autonomous policy impact assessment agent built using Google ADK and Gemini 2.5 Flash. It automates the analysis of policy documents to identify affected populations, assess risk levels, and recommend mitigation strategies.
 
 ## 🎯 Overview
 
 Policy impact analysis is traditionally slow and manual, often taking weeks to complete. PolicyLens leverages agentic AI to reduce this process to seconds, enabling rapid policy assessment and decision-making.
+
+## ❔ What it does
+- Reads a policy document (PDF)
+- Reads demographic data (CSV)
+- Identifies affected populations
+- Assesses risk level
+- Recommends mitigation strategies
 
 ## ✨ Features
 
@@ -18,7 +25,7 @@ Policy impact analysis is traditionally slow and manual, often taking weeks to c
 ## 🛠️ Tech Stack
 
 - **Google ADK** - Agent orchestration and workflow management
-- **Gemini 3** - Advanced AI model via Vertex AI for document analysis
+- **Gemini 2.5 Flash ** - Advanced AI model via Vertex AI for document analysis
 - **Python** - Core development language
 - **FastAPI** - RESTful API framework
 - **Google Cloud Storage** - Document and data storage
@@ -109,9 +116,10 @@ For questions or support, please open an issue on GitHub.
 
 ## 🏆 Status
 
-**Current Status**: Hackathon MVP
+**Current Status**: Hackathon (GDG Agent-a-thon) MVP
 
 ---
 
 Built with ❤️ using Google ADK and Gemini 3
+
 
