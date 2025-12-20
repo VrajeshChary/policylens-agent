@@ -1,41 +1,35 @@
-<<<<<<< HEAD
 """
 PolicyLens Agent - Tools and utilities
 """
+import os
+import pandas as pd
+from PyPDF2 import PdfReader
+
 def extract_policy_text(pdf_path: str) -> str:
     """Extract text from policy PDF"""
-    pass
+    try:
+        reader = PdfReader(pdf_path)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        print(f"Error extracting PDF text: {e}")
+        return ""
 
-def load_demographics(csv_path: str) -> dict:
-    """Load demographics data from CSV"""
-    pass
+def load_demographics(csv_path: str) -> str:
+    """Load demographics data from CSV and convert to string for the agent"""
+    try:
+        df = pd.read_csv(csv_path)
+        # Convert first few rows to string to give context, or full content if small
+        return df.to_string(index=False)
+    except Exception as e:
+        print(f"Error loading demographics: {e}")
+        return ""
 
 def assess_policy_impact(policy_text: str):
     """
-    Placeholder function to prevent ImportError.
-    Real logic will be added here later.
+    Placeholder function. In a real agentic workflow, this might call other sub-agents.
     """
-    print(f"Analyzing policy: {policy_text}")
-    return "Analysis pending implementation."
-
-=======
-"""
-PolicyLens Agent - Tools and utilities
-"""
-def extract_policy_text(pdf_path: str) -> str:
-    """Extract text from policy PDF"""
-    pass
-
-def load_demographics(csv_path: str) -> dict:
-    """Load demographics data from CSV"""
-    pass
-
-def assess_policy_impact(policy_text: str):
-    """
-    Placeholder function to prevent ImportError.
-    Real logic will be added here later.
-    """
-    print(f"Analyzing policy: {policy_text}")
-    return "Analysis pending implementation."
-
->>>>>>> 46c1933 (Initial commit)
+    print(f"Analyzing policy impact...")
+    return "Impact assessment delegated to main agent logic."

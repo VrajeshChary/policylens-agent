@@ -121,5 +121,3 @@ For questions or support, please open an issue on GitHub.
 ---
 
 Built with ❤️ using Google ADK and Gemini 3
-
-
