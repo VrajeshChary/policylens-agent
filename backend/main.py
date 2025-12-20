@@ -32,6 +32,16 @@ async def analyze_policy_files(
     demographics_file: Optional[UploadFile] = File(None)
 ):
     try:
+        # Input Validation
+        if not policy_file.filename.endswith(".pdf"):
+            return {
+                "affected_groups": [],
+                "risk_level": "N/A",
+                "impacted_regions": [],
+                "recommendations": ["Invalid file format. Please upload a PDF policy document."],
+                "reasoning_summary": "Error: Invalid input format."
+            }
+
         # Create a temporary directory to store uploaded files
         with tempfile.TemporaryDirectory() as temp_dir:
             # Handle Policy PDF
@@ -46,10 +56,14 @@ async def analyze_policy_files(
             # Handle Demographics CSV
             demographics_text = ""
             if demographics_file:
-                demographics_path = os.path.join(temp_dir, demographics_file.filename)
-                with open(demographics_path, "wb") as buffer:
-                    shutil.copyfileobj(demographics_file.file, buffer)
-                demographics_text = load_demographics(demographics_path)
+                if not (demographics_file.filename.endswith(".csv") or demographics_file.filename.endswith(".xlsx")):
+                     # Soft fail on demographics, just ignore or warn
+                     print("Warning: Invalid demographics file format. Proceeding without it.")
+                else:
+                    demographics_path = os.path.join(temp_dir, demographics_file.filename)
+                    with open(demographics_path, "wb") as buffer:
+                        shutil.copyfileobj(demographics_file.file, buffer)
+                    demographics_text = load_demographics(demographics_path)
 
             print("Sending request to AI agent...")
             response = agent.run(policy_text, demographics_text)
@@ -58,10 +72,11 @@ async def analyze_policy_files(
     except Exception as e:
         print(f"⚠️ Error detected: {e}")
         return {
-            "affected_groups": ["System Error"],
+            "affected_groups": [],
             "risk_level": "Unknown",
-            "regions": ["N/A"],
-            "recommendations": [f"Error processing files: {str(e)}"]
+            "impacted_regions": [],
+            "recommendations": [f"Error processing files: {str(e)}"],
+            "reasoning_summary": "An unexpected error occurred."
         }
 
 @app.post("/analyze-text")
@@ -74,10 +89,11 @@ async def analyze_policy_text(request: PolicyRequest):
     except Exception as e:
          print(f"⚠️ Error detected: {e}")
          return {
-            "affected_groups": ["System Error"],
+            "affected_groups": [],
             "risk_level": "Unknown",
-            "regions": ["N/A"],
-            "recommendations": [f"Error: {str(e)}"]
+            "impacted_regions": [],
+            "recommendations": [f"Error: {str(e)}"],
+            "reasoning_summary": "An unexpected error occurred."
         }
 
 script_dir = os.path.dirname(__file__)

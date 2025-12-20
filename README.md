@@ -1,123 +1,85 @@
-# PolicyLens Agent
+# PolicyLens
 
-PolicyLens is an autonomous policy impact assessment agent built using Google ADK and Gemini 2.5 Flash. It automates the analysis of policy documents to identify affected populations, assess risk levels, and recommend mitigation strategies.
+**AI-Powered Policy Impact Assessment for Agile Governance**
 
-## 🎯 Overview
-
-Policy impact analysis is traditionally slow and manual, often taking weeks to complete. PolicyLens leverages agentic AI to reduce this process to seconds, enabling rapid policy assessment and decision-making.
-
-## ❔ What it does
-- Reads a policy document (PDF)
-- Reads demographic data (CSV)
-- Identifies affected populations
-- Assesses risk level
-- Recommends mitigation strategies
-
-## ✨ Features
-
-- **Document Processing**: Reads and analyzes policy documents (PDF format)
-- **Demographic Analysis**: Processes demographic data (CSV format)
-- **Population Impact Assessment**: Identifies affected populations based on policy content
-- **Risk Assessment**: Evaluates and categorizes risk levels
-- **Mitigation Recommendations**: Provides actionable strategies to address identified risks
-- **Autonomous Operation**: Uses Google ADK for intelligent agent orchestration
-
-## 🛠️ Tech Stack
-
-- **Google ADK** - Agent orchestration and workflow management
-- **Gemini 2.5 Flash ** - Advanced AI model via Vertex AI for document analysis
-- **Python** - Core development language
-- **FastAPI** - RESTful API framework
-- **Google Cloud Storage** - Document and data storage
-- **Google Stitch** - User interface
-- **Cursor IDE** - Development environment
-
-## 📋 Prerequisites
-
-- Python 3.9 or higher
-- Google Cloud Platform account with Vertex AI enabled
-- Access to Google ADK
-- Google Cloud Storage bucket configured
-
-## 🚀 Getting Started
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/VrajeshChary/policylens-agent.git
-cd policylens-agent
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Set up environment variables:
-```bash
-export GOOGLE_CLOUD_PROJECT=your-project-id
-export VERTEX_AI_LOCATION=us-central1
-export GCS_BUCKET_NAME=your-bucket-name
-```
-
-### Usage
-
-1. Start the FastAPI server:
-```bash
-uvicorn main:app --reload
-```
-
-2. Upload a policy document (PDF) and demographic data (CSV) through the API or UI
-
-3. The agent will automatically:
-   - Parse the policy document
-   - Analyze demographic data
-   - Identify affected populations
-   - Assess risk levels
-   - Generate mitigation recommendations
-
-## 📁 Project Structure
-
-```
-policylens-agent/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── main.py              # FastAPI application entry point
-├── agents/              # Agent orchestration logic
-├── services/            # Core business logic
-├── models/              # Data models and schemas
-├── utils/               # Utility functions
-└── tests/               # Test files
-```
-
-## 🔧 Configuration
-
-Configure your Google Cloud credentials and project settings in `config.py` or via environment variables.
-
-## 📊 API Endpoints
-
-- `POST /analyze` - Submit policy document and demographic data for analysis
-- `GET /status/{job_id}` - Check the status of an analysis job
-- `GET /results/{job_id}` - Retrieve analysis results
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is part of a hackathon MVP. See LICENSE file for details.
-
-## 📧 Contact
-
-For questions or support, please open an issue on GitHub.
-
-## 🏆 Status
-
-**Current Status**: Hackathon (GDG Agent-a-thon) MVP
+PolicyLens is an autonomous agent designed to help policymakers, NGOs, and citizens understand the real-world impact of government policies. By leveraging **Google's Gemini 1.5 Pro**, it analyzes complex policy documents against demographic data to identify affected groups, assess risks, and recommend mitigation strategies.
 
 ---
 
-Built with ❤️ using Google ADK and Gemini 3
+## 🚀 Problem Statement
+Government policies often have unintended consequences on vulnerable populations. Analyzing these impacts requires:
+- Extensive manual reading of legal documents.
+- Correlation with vast demographic datasets.
+- Hours or days of expert analysis.
+
+**PolicyLens** automates this process, providing instant, data-driven impact assessments.
+
+## 💡 Solution Overview
+PolicyLens serves as an intelligent "Judge" that:
+1. **Parses** complex PDF policy documents.
+2. **Correlates** policy clauses with demographic data (CSV).
+3. **Reasons** over potential social and economic risks.
+4. **Generates** actionable mitigation recommendations.
+
+## 🤖 Why Agentic AI?
+Traditional scripts follow fixed rules. PolicyLens uses **Agentic AI** to:
+- **Reason Dynamically**: It understands context, not just keywords.
+- **Self-Correct**: It validates its own output structure.
+- **Use Tools**: It simulates calling specialized "sub-agents" for reasoning tasks.
+
+## 🛠️ Google Technologies Used
+- **Google Gemini 1.5 Pro**: The core reasoning engine for understanding policy nuances.
+- **Google Cloud Run (Ready)**: Designed for stateless, scalable deployment.
+- **Python (FastAPI)**: High-performance backend framework.
+
+## 🔄 System Workflow
+1. **User Uploads**: Policy PDF and Demographics CSV.
+2. **Preprocessing**: Backend extracts text and structured data.
+3. **Agentic Reasoning**:
+   - Step 1: **Mechanism Analysis** (What does the policy do?)
+   - Step 2: **Impact Correlation** (Who does it affect?)
+   - Step 3: **Risk Scoring** (How severe is the impact?)
+4. **Response**: JSON structure containing affected groups, risks, and mitigations.
+5. **Visualization**: Frontend displays a clear, interactive summary.
+
+## 💻 How to Run Locally
+
+### Prerequisites
+- Python 3.9+
+- A Google Cloud Project with Gemini API enabled.
+- `GEMINI_API_KEY` set in your environment.
+
+### Steps
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-repo/policylens.git
+   cd policylens
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set Environment Variable**
+   ```bash
+   export GEMINI_API_KEY="your_api_key_here"
+   ```
+
+4. **Run the Server**
+   ```bash
+   uvicorn backend.main:app --reload
+   ```
+
+5. **Access the App**
+   Open `http://127.0.0.1:8000` in your browser.
+
+## 🎯 Demo Instructions
+1. Open the web interface.
+2. Upload `data/sample_policy.pdf`.
+3. (Optional) Upload `data/sample_demographics.csv`.
+4. Click **Analyze**.
+5. Watch the agent break down the policy and provide insights on "Urban Gig Workers" or "Rural Farmers".
+
+---
+*Built for the Google AI Hackathon.*

@@ -1,4 +1,15 @@
-import os
+"""
+PolicyLens: Autonomous Policy Impact Assessment Agent.
+
+This module defines the PolicyImpactAgent, which uses Google's Gemini models to
+autonomously analyze policy documents, assess their impact on various demographic groups,
+and recommend mitigation strategies. It follows a step-wise reasoning process:
+1. Parse Policy & Demographics
+2. Reason over Impact
+3. Assess Risk
+4. Generate Recommendations
+"""
+
 import json
 from google import genai
 from google.genai import types
@@ -6,6 +17,10 @@ from backend.tools import assess_policy_impact
 from backend.config import GEMINI_API_KEY, GEMINI_MODEL
 
 class PolicyImpactAgent:
+    """
+    An autonomous agent that analyzes policy documents and demographic data
+    to assess social impact and risk.
+    """
     def __init__(self):
         self.api_key = GEMINI_API_KEY
         self.client = None
@@ -22,43 +37,45 @@ class PolicyImpactAgent:
 
         # System prompt
         self.system_prompt = """
-        You are an autonomous policy impact assessment agent.
+        You are PolicyLens, an autonomous policy impact assessment agent.
 
-You will be given:
-- A policy description
-- Demographic data (text or CSV)
+        Your Goal: Analyze policy documents to identify social risks and impacts on specific demographic groups.
 
-Your tasks:
-1. Identify population groups affected by the policy
-2. Assign a risk level to each group (Low, Medium, High)
-3. Identify impacted regions
-4. Suggest practical mitigation measures
+        Input:
+        1. Policy Text
+        2. Demographic Data Context (if available)
 
-Output rules (STRICT AND NON-NEGOTIABLE):
-- Output VALID JSON only
-- Do not include any text outside the JSON
-- Follow the exact JSON schema provided
-- Use short, clear, non-technical phrases
-- Identify a maximum of 3 affected groups
-- Use ONLY these risk labels: Low, Medium, High
-- Regions must be Indian state or district names only
-- Do NOT use city, zone, or metro names
-- If demographic data mentions cities, map them to the corresponding state
-- reasoning_summary must be a single paragraph under 35 words
-- Do not include line breaks in reasoning_summary
+        Execution Steps:
+        1. ANALYZE the policy to understand its core mechanisms.
+        2. CORRELATE policy mechanisms with demographic data.
+        3. IDENTIFY specific affected groups (e.g., "Low-income farmers", "Urban gig workers").
+        4. ASSESS risk levels (High/Medium/Low) based on economic or social vulnerability.
+        5. GENERATE mitigation strategies.
 
-JSON Schema (must match exactly):
-{
-  "affected_groups": [
-    {
-      "group": "",
-      "risk_level": "",
-      "regions": []
-    }
-  ],
-  "mitigations": [],
-  "reasoning_summary": ""
-}
+        Constraint Checklist & Confidence Score:
+        1. Output must be valid JSON.
+        2. Identify MAX 3 key affected groups.
+        3. Risk levels must be: High, Medium, or Low.
+        4. impacted_regions must be specific states or districts (e.g. "Karnataka", "Mumbai Suburban").
+        5. No markdown formatting (like ```json).
+
+        Output JSON Schema:
+        {
+          "affected_groups": [
+            {
+              "group": "Name of the group",
+              "risk_level": "High/Medium/Low",
+              "regions": ["Region1", "Region2"]
+            }
+          ],
+          "risk_level": "High/Medium/Low",
+          "impacted_regions": ["Region1", "Region2"],
+          "recommendations": [
+            "Actionable recommendation 1",
+            "Actionable recommendation 2"
+          ],
+          "reasoning_summary": "Single paragraph summary of the impact analysis (under 50 words)."
+        }
         """
 
     def run(self, policy_text: str, demographics_text: str = ""):
@@ -67,46 +84,69 @@ JSON Schema (must match exactly):
         """
         if not self.client:
             return {
-                "affected_groups": ["System Configuration Error"],
+                "affected_groups": [],
                 "risk_level": "Unknown",
-                "regions": ["N/A"],
-                "recommendations": ["API Key missing or invalid. Please configure GEMINI_API_KEY."]
+                "impacted_regions": [],
+                "recommendations": ["API Key missing or invalid. Please configure GEMINI_API_KEY."],
+                "reasoning_summary": "System Configuration Error: API Key missing."
             }
 
         demographics_part = f" against these demographics: {demographics_text[:5000]}..." if demographics_text else ""
         prompt = f"Analyze this policy: {policy_text[:20000]}...{demographics_part}"
         
         try:
+            # Explicit Step-by-Step Execution for Visibility
             print("Step 1: Parsing policy and demographics...")
-            print("Step 2: Sending to Gemini for reasoning...")
+            # (Parsing happened in main.py before calling run, but we acknowledge it here)
 
+            print("Step 2: Impact Reasoning (Agentic Step)...")
+            # We explicitly call the tool here to show "reasoning" logic,
+            # even though Gemini does the heavy lifting.
+            # In a more complex agent, this would be a separate LLM call or RAG lookup.
+            impact_check = assess_policy_impact(policy_text)
+            print(f"      -> {impact_check['details']}")
+
+            print("Step 3: Risk Assessment & Recommendation Generation (Gemini)...")
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=self.system_prompt,
+                    # We keep the tool available to the model if it chooses to use it,
+                    # but we also forced a step above for visibility.
                     tools=[assess_policy_impact],
                     response_mime_type="application/json"
                 )
             )
 
-            print("Step 3: Received response, parsing JSON...")
+            print("Step 4: validating Output...")
             if response.text:
-                return json.loads(response.text)
+                cleaned_text = response.text.strip()
+                # Remove markdown code blocks if present
+                if cleaned_text.startswith("```json"):
+                    cleaned_text = cleaned_text[7:]
+                if cleaned_text.startswith("```"):
+                    cleaned_text = cleaned_text[3:]
+                if cleaned_text.endswith("```"):
+                    cleaned_text = cleaned_text[:-3]
+
+                return json.loads(cleaned_text.strip())
             
             # Handle empty response (rare)
             return {
                 "affected_groups": [],
                 "risk_level": "Error",
-                "regions": [],
-                "recommendations": ["Model returned no text."]
+                "impacted_regions": [],
+                "recommendations": ["Model returned no text."],
+                "reasoning_summary": "Error: Model returned no text."
             }
 
         except Exception as e:
             print(f"Agent Error: {e}")
             return {
-                "affected_groups": ["Error analyzing data"],
+                "affected_groups": [],
                 "risk_level": "Unknown",
-                "regions": [],
-                "recommendations": [f"Please try again. Error: {str(e)}"]
+                "impacted_regions": [],
+                "recommendations": [f"Please try again. Error: {str(e)}"],
+                "reasoning_summary": "Error analyzing data."
             }

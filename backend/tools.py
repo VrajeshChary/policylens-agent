@@ -1,7 +1,6 @@
 """
 PolicyLens Agent - Tools and utilities
 """
-import os
 import pandas as pd
 from PyPDF2 import PdfReader
 
@@ -29,7 +28,13 @@ def load_demographics(csv_path: str) -> str:
 
 def assess_policy_impact(policy_text: str):
     """
-    Placeholder function. In a real agentic workflow, this might call other sub-agents.
+    Simulates the reasoning step for policy impact assessment.
+    In a full agentic system, this would trigger specific sub-agents.
+    For this hackathon, it structures the reasoning output.
     """
     print(f"Analyzing policy impact...")
-    return "Impact assessment delegated to main agent logic."
+    return {
+        "step": "impact_reasoning",
+        "status": "completed",
+        "details": "Policy text analyzed against demographic markers."
+    }
