@@ -38,8 +38,7 @@ async def analyze_policy_files(
                 "affected_groups": [],
                 "risk_level": "N/A",
                 "impacted_regions": [],
-                "recommendations": ["Invalid file format. Please upload a PDF policy document."],
-                "reasoning_summary": "Error: Invalid input format."
+                "recommendations": ["Invalid file format. Please upload a PDF policy document."]
             }
 
         # Create a temporary directory to store uploaded files
@@ -75,8 +74,7 @@ async def analyze_policy_files(
             "affected_groups": [],
             "risk_level": "Unknown",
             "impacted_regions": [],
-            "recommendations": [f"Error processing files: {str(e)}"],
-            "reasoning_summary": "An unexpected error occurred."
+            "recommendations": [f"Error processing files: {str(e)}"]
         }
 
 @app.post("/analyze-text")
@@ -92,8 +90,7 @@ async def analyze_policy_text(request: PolicyRequest):
             "affected_groups": [],
             "risk_level": "Unknown",
             "impacted_regions": [],
-            "recommendations": [f"Error: {str(e)}"],
-            "reasoning_summary": "An unexpected error occurred."
+            "recommendations": [f"Error: {str(e)}"]
         }
 
 script_dir = os.path.dirname(__file__)

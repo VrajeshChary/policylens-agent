@@ -53,28 +53,21 @@ class PolicyImpactAgent:
         5. GENERATE mitigation strategies.
 
         Constraint Checklist & Confidence Score:
-        1. Output must be valid JSON.
+        1. Output must be strictly valid JSON.
         2. Identify MAX 3 key affected groups.
-        3. Risk levels must be: High, Medium, or Low.
+        3. Risk levels must be exactly: High, Medium, or Low.
         4. impacted_regions must be specific states or districts (e.g. "Karnataka", "Mumbai Suburban").
-        5. No markdown formatting (like ```json).
+        5. Do NOT output markdown code blocks. Output ONLY raw JSON.
 
-        Output JSON Schema:
+        Output JSON Schema (Strictly Enforced):
         {
-          "affected_groups": [
-            {
-              "group": "Name of the group",
-              "risk_level": "High/Medium/Low",
-              "regions": ["Region1", "Region2"]
-            }
-          ],
+          "affected_groups": ["Group Name 1", "Group Name 2"],
           "risk_level": "High/Medium/Low",
           "impacted_regions": ["Region1", "Region2"],
           "recommendations": [
             "Actionable recommendation 1",
             "Actionable recommendation 2"
-          ],
-          "reasoning_summary": "Single paragraph summary of the impact analysis (under 50 words)."
+          ]
         }
         """
 
@@ -84,11 +77,10 @@ class PolicyImpactAgent:
         """
         if not self.client:
             return {
-                "affected_groups": [],
+                "affected_groups": ["System Configuration Error"],
                 "risk_level": "Unknown",
                 "impacted_regions": [],
-                "recommendations": ["API Key missing or invalid. Please configure GEMINI_API_KEY."],
-                "reasoning_summary": "System Configuration Error: API Key missing."
+                "recommendations": ["API Key missing or invalid. Please configure GEMINI_API_KEY."]
             }
 
         demographics_part = f" against these demographics: {demographics_text[:5000]}..." if demographics_text else ""
@@ -137,8 +129,7 @@ class PolicyImpactAgent:
                 "affected_groups": [],
                 "risk_level": "Error",
                 "impacted_regions": [],
-                "recommendations": ["Model returned no text."],
-                "reasoning_summary": "Error: Model returned no text."
+                "recommendations": ["Model returned no text."]
             }
 
         except Exception as e:
@@ -147,6 +138,5 @@ class PolicyImpactAgent:
                 "affected_groups": [],
                 "risk_level": "Unknown",
                 "impacted_regions": [],
-                "recommendations": [f"Please try again. Error: {str(e)}"],
-                "reasoning_summary": "Error analyzing data."
+                "recommendations": [f"Please try again. Error: {str(e)}"]
             }
