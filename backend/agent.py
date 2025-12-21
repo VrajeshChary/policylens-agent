@@ -1,24 +1,25 @@
-<<<<<<< HEAD
 import os
 import json
+import logging
+import re
 from google import genai
-from google.genai import types # <--- You need this import for the config  # pyright: ignore[reportMissingImports]
-from backend.tools import assess_policy_impact
+from google.genai import types
+
+logger = logging.getLogger(__name__)
+
 
 class PolicyImpactAgent:
     def __init__(self):
-        # 1. FIX: Put quotes around your key to make it a string
-        api_key = "AIzaSyBUG3v6aBlszVfIUPR3ZzJNclyqKBWoOBc"
+        api_key = os.getenv("GEMINI_API_KEY", "AIzaSyBUG3v6aBlszVfIUPR3ZzJNclyqKBWoOBc")
         
         if not api_key:
-            print("⚠️ Warning: GEMINI_API_KEY not found.")
+            logger.warning("⚠️ Warning: GEMINI_API_KEY not found.")
             
         self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = "gemini-2.5-flash"
 
-        # 2. DEFINITION: System prompt
         self.system_prompt = """
-        You are an autonomous policy impact assessment agent.
+You are an autonomous policy impact assessment agent.
 
 You will be given:
 - A policy description
@@ -57,134 +58,82 @@ JSON Schema (must match exactly):
 }
         """
 
-    # I renamed this to 'analyze' because your main.py likely calls agent.analyze()
     def analyze(self, policy_text: str, demographics_text: str):
-        prompt = f"Analyze this policy: {policy_text[:20000]}... against these demographics: {demographics_text[:5000]}..."
+        # Truncate inputs if too long
+        if len(policy_text) > 20000:
+            logger.warning(f"Policy text truncated from {len(policy_text)} to 20000 characters")
+            policy_text = policy_text[:20000]
+        
+        if len(demographics_text) > 5000:
+            logger.warning(f"Demographics text truncated from {len(demographics_text)} to 5000 characters")
+            demographics_text = demographics_text[:5000]
+        
+        prompt = f"Analyze this policy: {policy_text}\n\nAgainst these demographics: {demographics_text}"
         
         try:
-            # 3. FIX: Use 'self.client.models' and pass the configuration
+            logger.info("Sending request to gemini-2.5-flash for analysis")
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction=self.system_prompt, # <--- Pass prompt here
-                    tools=[assess_policy_impact],          # <--- Pass tool here
-                    response_mime_type="application/json"  # <--- Force JSON here
+                    system_instruction=self.system_prompt,
+                    response_mime_type="application/json"
                 )
             )
 
-            # 4. Return the text (parsed as JSON)
             if response.text:
-                return json.loads(response.text)
+                # Parse JSON response
+                try:
+                    result = json.loads(response.text)
+                except json.JSONDecodeError as e:
+                    # Try to extract JSON from markdown code blocks if present
+                    text = response.text.strip()
+                    # Remove markdown code blocks if present
+                    if text.startswith("```"):
+                        text = re.sub(r'^```(?:json)?\s*\n', '', text)
+                        text = re.sub(r'\n```\s*$', '', text)
+                    try:
+                        result = json.loads(text)
+                    except json.JSONDecodeError:
+                        logger.error(f"Failed to parse JSON response: {e}")
+                        logger.error(f"Response text: {response.text[:500]}")
+                        raise ValueError(f"Invalid JSON response from model: {str(e)}")
+                
+                # Validate response structure
+                if not isinstance(result, dict):
+                    raise ValueError("Response is not a dictionary")
+                
+                # Ensure required fields exist
+                if "affected_groups" not in result:
+                    result["affected_groups"] = []
+                if "mitigations" not in result:
+                    result["mitigations"] = []
+                if "reasoning_summary" not in result:
+                    result["reasoning_summary"] = "Analysis completed"
+                
+                logger.info("Analysis completed successfully")
+                return result
             
-            # Handle empty response (rare)
+            # Handle empty response
+            logger.warning("Model returned empty response")
             return {
                 "affected_groups": [],
-                "risk_level": "Error",
-                "regions": [],
-                "recommendations": ["Model returned no text."]
+                "mitigations": [],
+                "reasoning_summary": "Model returned no text."
             }
 
-        except Exception as e:
-            print(f"Agent Error: {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {e}")
+            logger.error(f"Response text: {response.text if 'response' in locals() else 'No response'}")
             return {
-                "affected_groups": ["Error analyzing data"],
-                "risk_level": "Unknown",
-                "regions": [],
-                "recommendations": [f"Please try again. Error: {str(e)}"]
-=======
-import os
-import json
-from google import genai
-from google.genai import types # <--- You need this import for the config  # pyright: ignore[reportMissingImports]
-from backend.tools import assess_policy_impact
-
-class PolicyImpactAgent:
-    def __init__(self):
-        # 1. FIX: Put quotes around your key to make it a string
-        api_key = "AIzaSyBUG3v6aBlszVfIUPR3ZzJNclyqKBWoOBc"
-        
-        if not api_key:
-            print("⚠️ Warning: GEMINI_API_KEY not found.")
-            
-        self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-1.5-flash"
-
-        # 2. DEFINITION: System prompt
-        self.system_prompt = """
-        You are an autonomous policy impact assessment agent.
-
-You will be given:
-- A policy description
-- Demographic data (text or CSV)
-
-Your tasks:
-1. Identify population groups affected by the policy
-2. Assign a risk level to each group (Low, Medium, High)
-3. Identify impacted regions
-4. Suggest practical mitigation measures
-
-Output rules (STRICT AND NON-NEGOTIABLE):
-- Output VALID JSON only
-- Do not include any text outside the JSON
-- Follow the exact JSON schema provided
-- Use short, clear, non-technical phrases
-- Identify a maximum of 3 affected groups
-- Use ONLY these risk labels: Low, Medium, High
-- Regions must be Indian state or district names only
-- Do NOT use city, zone, or metro names
-- If demographic data mentions cities, map them to the corresponding state
-- reasoning_summary must be a single paragraph under 35 words
-- Do not include line breaks in reasoning_summary
-
-JSON Schema (must match exactly):
-{
-  "affected_groups": [
-    {
-      "group": "",
-      "risk_level": "",
-      "regions": []
-    }
-  ],
-  "mitigations": [],
-  "reasoning_summary": ""
-}
-        """
-
-    # I renamed this to 'analyze' because your main.py likely calls agent.analyze()
-    def analyze(self, policy_text: str, demographics_text: str):
-        prompt = f"Analyze this policy: {policy_text[:20000]}... against these demographics: {demographics_text[:5000]}..."
-        
-        try:
-            # 3. FIX: Use 'self.client.models' and pass the configuration
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=self.system_prompt, # <--- Pass prompt here
-                    tools=[assess_policy_impact],          # <--- Pass tool here
-                    response_mime_type="application/json"  # <--- Force JSON here
-                )
-            )
-
-            # 4. Return the text (parsed as JSON)
-            if response.text:
-                return json.loads(response.text)
-            
-            # Handle empty response (rare)
-            return {
-                "affected_groups": [],
-                "risk_level": "Error",
-                "regions": [],
-                "recommendations": ["Model returned no text."]
+                "affected_groups": [{"group": "Error parsing response", "risk_level": "Unknown", "regions": []}],
+                "mitigations": ["Please try again. The AI response was invalid."],
+                "reasoning_summary": "Error occurred while parsing AI response."
             }
-
         except Exception as e:
-            print(f"Agent Error: {e}")
+            logger.error(f"Agent Error: {e}", exc_info=True)
             return {
-                "affected_groups": ["Error analyzing data"],
-                "risk_level": "Unknown",
-                "regions": [],
-                "recommendations": [f"Please try again. Error: {str(e)}"]
->>>>>>> 46c1933 (Initial commit)
+                "affected_groups": [{"group": "Error analyzing data", "risk_level": "Unknown", "regions": []}],
+                "mitigations": [f"Please try again. Error: {str(e)}"],
+                "reasoning_summary": f"An error occurred: {str(e)}"
             }
