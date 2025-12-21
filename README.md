@@ -1,125 +1,74 @@
-# PolicyLens Agent
+# PolicyLens
 
 PolicyLens is an autonomous policy impact assessment agent built using Google ADK and Gemini 2.5 Flash. It automates the analysis of policy documents to identify affected populations, assess risk levels, and recommend mitigation strategies.
 
-## 🎯 Overview
+## 🎯 Problem Statement
 
-Policy impact analysis is traditionally slow and manual, often taking weeks to complete. PolicyLens leverages agentic AI to reduce this process to seconds, enabling rapid policy assessment and decision-making.
+Policy impact analysis is traditionally slow, manual, and prone to oversight. Governance teams often struggle to rapidly identify how new policies affect specific demographic groups, leading to unintended consequences and delayed implementation.
 
-## ❔ What it does
-- Reads a policy document (PDF)
-- Reads demographic data (CSV)
-- Identifies affected populations
-- Assesses risk level
-- Recommends mitigation strategies
+## 💡 Solution Overview
 
-## ✨ Features
+PolicyLens leverages Agentic AI to transform this process. By autonomously reading policy documents and reasoning over demographic data, it provides instant, structured impact assessments. This enables policymakers to make data-driven decisions in seconds rather than weeks.
 
-- **Document Processing**: Reads and analyzes policy documents (PDF format)
-- **Demographic Analysis**: Processes demographic data (CSV format)
-- **Population Impact Assessment**: Identifies affected populations based on policy content
-- **Risk Assessment**: Evaluates and categorizes risk levels
-- **Mitigation Recommendations**: Provides actionable strategies to address identified risks
-- **Autonomous Operation**: Uses Google ADK for intelligent agent orchestration
+## 🤖 Why Agentic AI?
 
-## 🛠️ Tech Stack
+Traditional NLP can extract text, but it lacks reasoning. PolicyLens acts as an **agent**:
+- **It Plans**: Breaks down analysis into policy parsing, demographic mapping, and risk evaluation.
+- **It Reasons**: Connects policy clauses to specific population needs.
+- **It Acts**: Generates structured, actionable mitigation strategies.
 
-- **Google ADK** - Agent orchestration and workflow management
-- **Gemini 2.5 Flash ** - Advanced AI model via Vertex AI for document analysis
-- **Python** - Core development language
-- **FastAPI** - RESTful API framework
-- **Google Cloud Storage** - Document and data storage
-- **Google Stitch** - User interface
-- **Cursor IDE** - Development environment
+## 🛠️ Google Technologies Used
 
-## 📋 Prerequisites
+- **Google Gemini 2.5 Flash**: The core reasoning engine for high-speed, accurate document analysis.
+- **Google Cloud Vertex AI**: Infrastructure for deploying and managing the AI models.
+- **Google Project IDX / Cloud Shell**: Development environment.
 
-- Python 3.9 or higher
-- Google Cloud Platform account with Vertex AI enabled
-- Access to Google ADK
-- Google Cloud Storage bucket configured
+## 🔄 System Workflow
 
-## 🚀 Getting Started
+1.  **Input**: User uploads a Policy PDF and (optional) Demographic CSV.
+2.  **Agent Orchestration**:
+    *   **Parsing**: Extracts text and structure from documents.
+    *   **Reasoning**: The `PolicyImpactAgent` analyzes the policy against demographic segments.
+    *   **Assessment**: Identifies risks (Low/Medium/High) and affected regions.
+    *   **Recommendation**: Generates specific mitigation steps.
+3.  **Output**: A structured JSON report displayed via a clean Web UI.
 
-### Installation
+## 💻 How to Run Locally
 
-1. Clone the repository:
-```bash
-git clone https://github.com/VrajeshChary/policylens-agent.git
-cd policylens-agent
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/policylens.git
+    cd policylens
+    ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+2.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-3. Set up environment variables:
-```bash
-export GOOGLE_CLOUD_PROJECT=your-project-id
-export VERTEX_AI_LOCATION=us-central1
-export GCS_BUCKET_NAME=your-bucket-name
-```
+3.  **Set up Environment:**
+    *   Get a Google Gemini API Key.
+    *   Set the `GEMINI_API_KEY` environment variable:
+        ```bash
+        export GEMINI_API_KEY="your-api-key"
+        ```
 
-### Usage
+4.  **Run the Backend:**
+    ```bash
+    uvicorn backend.main:app --reload --port 8000
+    ```
 
-1. Start the FastAPI server:
-```bash
-uvicorn main:app --reload
-```
+5.  **Access the App:**
+    *   Open `http://localhost:8000` in your browser.
 
-2. Upload a policy document (PDF) and demographic data (CSV) through the API or UI
+## 🎮 Demo Instructions
 
-3. The agent will automatically:
-   - Parse the policy document
-   - Analyze demographic data
-   - Identify affected populations
-   - Assess risk levels
-   - Generate mitigation recommendations
-
-## 📁 Project Structure
-
-```
-policylens-agent/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── main.py              # FastAPI application entry point
-├── agents/              # Agent orchestration logic
-├── services/            # Core business logic
-├── models/              # Data models and schemas
-├── utils/               # Utility functions
-└── tests/               # Test files
-```
-
-## 🔧 Configuration
-
-Configure your Google Cloud credentials and project settings in `config.py` or via environment variables.
-
-## 📊 API Endpoints
-
-- `POST /analyze` - Submit policy document and demographic data for analysis
-- `GET /status/{job_id}` - Check the status of an analysis job
-- `GET /results/{job_id}` - Retrieve analysis results
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is part of a hackathon MVP. See LICENSE file for details.
-
-## 📧 Contact
-
-For questions or support, please open an issue on GitHub.
-
-## 🏆 Status
-
-**Current Status**: Hackathon (GDG Agent-a-thon) MVP
+1.  **Launch the App**: Ensure the server is running at `http://localhost:8000`.
+2.  **Upload Policy**: Use the provided `data/sample_policy.pdf`.
+3.  **Upload Demographics**: Use the provided `data/sample_demographics.csv`.
+4.  **Click "Analyse"**: Watch the agent process the documents in real-time.
+5.  **View Results**: Explore the identified affected groups, risk levels, and mitigation strategies.
 
 ---
 
-Built with ❤️ using Google ADK and Gemini 3
-
-
+**Status**: Hackathon Submission (Polished & Stable)

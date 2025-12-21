@@ -1,3 +1,16 @@
+"""
+PolicyLens Policy Impact Assessment Agent
+
+This module defines the PolicyImpactAgent, an autonomous agent that uses Google's Gemini model
+to analyze policy documents against demographic data. It follows a step-wise reasoning process:
+1. Parse Policy & Demographics
+2. Reason over Impact
+3. Assess Risk
+4. Generate Recommendations
+
+The agent is designed to provide deterministic, structured JSON output for downstream consumption.
+"""
+
 import os
 import json
 import logging
@@ -9,57 +22,76 @@ logger = logging.getLogger(__name__)
 
 
 class PolicyImpactAgent:
+    """
+    Autonomous agent for assessing policy impact on demographic groups.
+    """
+
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY", "AIzaSyBUG3v6aBlszVfIUPR3ZzJNclyqKBWoOBc")
+        # Securely get API key from environment variable
+        api_key = os.getenv("GEMINI_API_KEY")
         
         if not api_key:
-            logger.warning("⚠️ Warning: GEMINI_API_KEY not found.")
+            logger.error("❌ Critical: GEMINI_API_KEY not found in environment variables.")
+            raise ValueError("GEMINI_API_KEY environment variable is not set.")
             
         self.client = genai.Client(api_key=api_key)
         self.model_name = "gemini-2.5-flash"
 
         self.system_prompt = """
-You are an autonomous policy impact assessment agent.
+You are PolicyLens, an autonomous policy impact assessment agent.
 
 You will be given:
-- A policy description
-- Demographic data (text or CSV)
+- A policy description (text)
+- Demographic data (text summary)
 
-Your tasks:
-1. Identify population groups affected by the policy
-2. Assign a risk level to each group (Low, Medium, High)
-3. Identify impacted regions
-4. Suggest practical mitigation measures
+Your mission is to analyze the policy's potential impact on specific demographic groups.
+
+Follow this step-wise reasoning process:
+1. **Analyze Policy**: Understand the core objectives and mechanisms of the policy.
+2. **Analyze Demographics**: Identify key population segments in the provided data.
+3. **Assess Impact**: Determine how the policy affects each group (positively or negatively).
+4. **Evaluate Risk**: Assign a risk level (Low, Medium, High) based on potential negative impact.
+5. **Recommend Mitigations**: Propose actionable steps to reduce negative impact.
 
 Output rules (STRICT AND NON-NEGOTIABLE):
-- Output VALID JSON only
-- Do not include any text outside the JSON
-- Follow the exact JSON schema provided
-- Use short, clear, non-technical phrases
-- Identify a maximum of 3 affected groups
-- Use ONLY these risk labels: Low, Medium, High
-- Regions must be Indian state or district names only
-- Do NOT use city, zone, or metro names
-- If demographic data mentions cities, map them to the corresponding state
-- reasoning_summary must be a single paragraph under 35 words
-- Do not include line breaks in reasoning_summary
+- Output VALID JSON only.
+- Do not include any text outside the JSON.
+- Follow the exact JSON schema provided.
+- Use short, clear, non-technical phrases.
+- Identify a maximum of 3 affected groups.
+- Use ONLY these risk labels: Low, Medium, High.
+- Regions must be Indian state or district names only (if applicable).
+- Do NOT use city, zone, or metro names.
+- If demographic data mentions cities, map them to the corresponding state.
+- reasoning_summary must be a single paragraph under 35 words.
+- Do not include line breaks in reasoning_summary.
 
 JSON Schema (must match exactly):
 {
   "affected_groups": [
     {
-      "group": "",
-      "risk_level": "",
-      "regions": []
+      "group": "Name of the group",
+      "risk_level": "Low/Medium/High",
+      "regions": ["Region1", "Region2"]
     }
   ],
-  "mitigations": [],
-  "reasoning_summary": ""
+  "mitigations": ["Mitigation 1", "Mitigation 2"],
+  "reasoning_summary": "Concise summary of the reasoning."
 }
         """
 
     def analyze(self, policy_text: str, demographics_text: str):
-        # Truncate inputs if too long
+        """
+        Analyzes the policy text against demographics text to determine impact.
+
+        Args:
+            policy_text (str): The extracted text from the policy document.
+            demographics_text (str): The summary of demographic data.
+
+        Returns:
+            dict: A structured dictionary containing affected groups, risk levels, and mitigations.
+        """
+        # Truncate inputs if too long to fit context window/avoid excessive costs
         if len(policy_text) > 20000:
             logger.warning(f"Policy text truncated from {len(policy_text)} to 20000 characters")
             policy_text = policy_text[:20000]

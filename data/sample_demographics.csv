@@ -1,0 +1,7 @@
+# This is a placeholder for sample_demographics.csv
+# Format: Region,Population_Group,Income_Level,Density
+Karnataka,Farmers,Low,High
+Maharashtra,Urban Workers,Medium,Very High
+Telangana,Students,Low,Medium
+Kerala,Elderly,High,Medium
+Tamil Nadu,Fishermen,Low,High

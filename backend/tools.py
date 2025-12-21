@@ -6,7 +6,10 @@ logger = logging.getLogger(__name__)
 
 
 def extract_policy_text(pdf_path: str) -> str:
-    """Extract text from policy PDF"""
+    """
+    Step 1: Policy Parsing
+    Extracts text from the provided policy PDF file.
+    """
     try:
         reader = PdfReader(pdf_path)
         text = ""
@@ -21,7 +24,10 @@ def extract_policy_text(pdf_path: str) -> str:
 
 
 def load_demographics(csv_path: str) -> str:
-    """Load demographics data from CSV and return as text summary"""
+    """
+    Step 2: Demographic Parsing
+    Loads demographics data from CSV/Excel and converts it to a text summary for the agent.
+    """
     try:
         # Try to read as CSV first
         if csv_path.endswith('.csv'):
@@ -41,13 +47,3 @@ def load_demographics(csv_path: str) -> str:
     except Exception as e:
         logger.error(f"Error loading demographics: {e}")
         return f"Error loading file: {str(e)}"
-
-
-def assess_policy_impact(policy_text: str):
-    """
-    Tool function for the AI agent to assess policy impact.
-    This is used by the agent's tool system.
-    """
-    # This function is called by the AI agent as a tool
-    # The actual implementation is in the agent's system prompt
-    return "Policy impact assessment tool"

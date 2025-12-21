@@ -52,7 +52,12 @@ async def lifespan(app: FastAPI):
         get_agent()
     except Exception as e:
         logger.error(f"Failed to initialize agent on startup: {e}")
-        raise
+        # We don't raise here to allow the app to start even if agent init fails (e.g. missing key)
+        # But requests needing the agent will fail.
+        # However, for a hackathon, crashing early is often preferred to debug config.
+        # But prompt asked "Ensure the API never crashes".
+        # So we log and continue.
+        pass
     yield
     # Shutdown
     logger.info("Shutting down PolicyLens API server...")
@@ -148,28 +153,40 @@ async def analyze_policy(
     demo_tmp_path: Optional[str] = None
     
     try:
-        # Validate policy file
-        if not policy_file.filename:
+        # Input Validation: Missing files
+        if not policy_file or not policy_file.filename:
             raise HTTPException(status_code=400, detail="Policy file is required")
         
+        # Input Validation: Format
         if not validate_file_extension(policy_file.filename, ALLOWED_POLICY_EXTENSIONS):
             raise HTTPException(
                 status_code=400,
                 detail=f"Policy file must be one of: {', '.join(ALLOWED_POLICY_EXTENSIONS)}"
             )
         
-        # Read and validate policy file size
-        policy_content = await policy_file.read()
-        if not validate_file_size(len(policy_content), MAX_FILE_SIZE):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Policy file size exceeds maximum allowed size of {MAX_FILE_SIZE / (1024*1024):.1f}MB"
-            )
+        # Input Validation: Size (Read content)
+        try:
+            policy_content = await policy_file.read()
+            if not validate_file_size(len(policy_content), MAX_FILE_SIZE):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Policy file size exceeds maximum allowed size of {MAX_FILE_SIZE / (1024*1024):.1f}MB"
+                )
+        except Exception as e:
+             if isinstance(e, HTTPException):
+                 raise
+             logger.error(f"Error reading policy file: {e}")
+             raise HTTPException(status_code=400, detail="Error reading policy file")
+
         
         # Save policy file temporarily
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-            tmp_file.write(policy_content)
-            policy_tmp_path = tmp_file.name
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                tmp_file.write(policy_content)
+                policy_tmp_path = tmp_file.name
+        except Exception as e:
+            logger.error(f"Error saving temp file: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save uploaded file")
         
         # Extract text from PDF
         try:
@@ -181,6 +198,9 @@ async def analyze_policy(
                 )
         except Exception as e:
             logger.error(f"Error extracting PDF text: {e}")
+            # Differentiate between our HTTPException and other errors
+            if isinstance(e, HTTPException):
+                raise
             raise HTTPException(
                 status_code=400,
                 detail=f"Failed to extract text from PDF: {str(e)}"
@@ -194,26 +214,29 @@ async def analyze_policy(
                     detail=f"Demographic file must be one of: {', '.join(ALLOWED_DEMOGRAPHIC_EXTENSIONS)}"
                 )
             
-            # Read and validate demographic file size
-            demo_content = await demographic_file.read()
-            if not validate_file_size(len(demo_content), MAX_FILE_SIZE):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Demographic file size exceeds maximum allowed size of {MAX_FILE_SIZE / (1024*1024):.1f}MB"
-                )
-            
-            # Save demographic file temporarily
-            ext = '.csv' if demographic_file.filename.lower().endswith('.csv') else '.xlsx'
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
-                tmp_file.write(demo_content)
-                demo_tmp_path = tmp_file.name
-            
-            # Load demographics
             try:
+                # Read and validate demographic file size
+                demo_content = await demographic_file.read()
+                if not validate_file_size(len(demo_content), MAX_FILE_SIZE):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Demographic file size exceeds maximum allowed size of {MAX_FILE_SIZE / (1024*1024):.1f}MB"
+                    )
+
+                # Save demographic file temporarily
+                ext = '.csv' if demographic_file.filename.lower().endswith('.csv') else '.xlsx'
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
+                    tmp_file.write(demo_content)
+                    demo_tmp_path = tmp_file.name
+
+                # Load demographics
                 demographics_text = load_demographics(demo_tmp_path)
                 if not demographics_text or "Error loading file" in demographics_text:
                     logger.warning(f"Demographic file processing issue: {demographics_text}")
                     demographics_text = "No demographic data could be extracted"
+
+            except HTTPException:
+                raise
             except Exception as e:
                 logger.error(f"Error loading demographics: {e}")
                 demographics_text = f"Error loading demographic data: {str(e)}"
