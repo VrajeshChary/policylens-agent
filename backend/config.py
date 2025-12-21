@@ -32,8 +32,15 @@ ALLOWED_POLICY_EXTENSIONS = [".pdf"]
 ALLOWED_DEMOGRAPHIC_EXTENSIONS = [".csv", ".xlsx", ".xls"]
 
 # Analysis Configuration
-RISK_LEVELS = ["low", "medium", "high", "critical"]
+RISK_LEVELS = ["Low", "Medium", "High"]  # Standardized risk levels
 DEFAULT_TIMEOUT = 300  # 5 minutes
+
+# Agent Configuration
+TEMPERATURE = float(os.getenv("AGENT_TEMPERATURE", "0.3"))  # Low temperature for deterministic output
+MAX_TOP_P = float(os.getenv("AGENT_TOP_P", "0.95"))  # Nucleus sampling parameter
+MAX_AFFECTED_GROUPS = 3  # Maximum number of affected groups to identify
+MAX_MITIGATIONS = 5  # Maximum number of mitigation strategies
+REASONING_SUMMARY_MAX_WORDS = 35  # Maximum words in reasoning summary
 
 # CORS Configuration
 CORS_ORIGINS = ["*"]

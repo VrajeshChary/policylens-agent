@@ -232,14 +232,34 @@ async def analyze_policy(
                 asyncio.to_thread(agent.analyze, policy_text, demographics_text),
                 timeout=DEFAULT_TIMEOUT
             )
+            
+            # Check if response indicates quota error
+            if isinstance(response, dict) and "reasoning_summary" in response:
+                if "quota" in response.get("reasoning_summary", "").lower() or "429" in response.get("reasoning_summary", ""):
+                    raise HTTPException(
+                        status_code=429,
+                        detail="API quota exceeded. Please wait a moment and try again, or check your API plan and billing details."
+                    )
         except asyncio.TimeoutError:
             logger.error("Analysis request timed out")
             raise HTTPException(
                 status_code=504,
                 detail=f"Analysis request timed out after {DEFAULT_TIMEOUT} seconds. Please try again with a smaller document."
             )
+        except HTTPException:
+            # Re-raise HTTP exceptions (like quota errors)
+            raise
         except Exception as e:
+            error_str = str(e)
             logger.error(f"Agent analysis error: {e}", exc_info=True)
+            
+            # Check for quota errors in exception message
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                raise HTTPException(
+                    status_code=429,
+                    detail="API quota exceeded. Please wait before retrying or check your Gemini API quota and billing details."
+                )
+            
             raise HTTPException(
                 status_code=500,
                 detail=f"Analysis failed: {str(e)}"
@@ -249,15 +269,50 @@ async def analyze_policy(
         if not isinstance(response, dict):
             raise HTTPException(status_code=500, detail="Invalid response format from agent")
         
+        # Check if demographic data was used
+        used_demographics = (
+            demographic_file and demographic_file.filename and 
+            demographics_text and 
+            "Error loading" not in demographics_text and 
+            "No demographic" not in demographics_text
+        )
+        
         # Ensure response matches expected schema
+        # Validate and normalize affected_groups
+        affected_groups = response.get("affected_groups", [])
+        if not isinstance(affected_groups, list):
+            affected_groups = []
+        # Ensure each group has required fields
+        normalized_groups = []
+        for group in affected_groups:
+            if isinstance(group, dict):
+                normalized_groups.append({
+                    "group": group.get("group", "Unknown Group"),
+                    "risk_level": group.get("risk_level", "Unknown"),
+                    "regions": group.get("regions", []) if isinstance(group.get("regions"), list) else []
+                })
+        
+        # Validate mitigations
+        mitigations = response.get("mitigations", [])
+        if not isinstance(mitigations, list):
+            mitigations = []
+        
         result = {
-            "affected_groups": response.get("affected_groups", []),
-            "mitigations": response.get("mitigations", []),
-            "reasoning_summary": response.get("reasoning_summary", "Analysis completed"),
-            "error": response.get("error")
+            "affected_groups": normalized_groups,
+            "mitigations": mitigations,
+            "reasoning_summary": str(response.get("reasoning_summary", "Analysis completed")),
+            "error": response.get("error"),
+            "demographics_used": used_demographics  # Flag to show CSV was utilized
         }
         
-        logger.info("Analysis completed successfully")
+        # Log the result structure for debugging
+        logger.info(f"Returning result with {len(normalized_groups)} groups, {len(mitigations)} mitigations")
+        
+        if used_demographics:
+            logger.info("Analysis completed successfully with demographic data integration")
+        else:
+            logger.info("Analysis completed successfully (policy PDF only)")
+        
         return result
         
     except HTTPException:

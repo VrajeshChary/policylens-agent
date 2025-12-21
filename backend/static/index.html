@@ -58,6 +58,11 @@
 <span>PolicyLens</span>
 </h2>
 </div>
+<div class="flex items-center gap-4">
+<button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Toggle dark mode">
+    <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">dark_mode</span>
+</button>
+</div>
 </header>
 <main class="flex flex-1 flex-col items-center justify-center px-4 py-8 lg:px-8">
 <div class="relative w-full max-w-4xl">
@@ -313,8 +318,25 @@ analyzeBtn.addEventListener('click', async function() {
         }
         
         // Store results and redirect
-        sessionStorage.setItem('analysisResults', JSON.stringify(data));
-        window.location.href = 'results.html';
+        try {
+            const jsonData = JSON.stringify(data);
+            console.log("Storing results, size:", jsonData.length);
+            sessionStorage.setItem('analysisResults', jsonData);
+            
+            // Small delay to ensure storage is complete
+            setTimeout(() => {
+                window.location.href = 'results.html';
+            }, 100);
+        } catch (storageError) {
+            console.error("Error storing results:", storageError);
+            showError("Error saving results. Please try again.");
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = `
+                <span class="material-symbols-outlined text-xl transition-transform group-hover:scale-110">auto_graph</span>
+                <span>Analyse</span>
+            `;
+            updateAnalyzeButton();
+        }
         
     } catch (error) {
         console.error('Error:', error);
@@ -333,6 +355,38 @@ analyzeBtn.addEventListener('click', async function() {
         updateAnalyzeButton();
     }
 });
+
+// Dark mode toggle
+function initDarkMode() {
+    const isDark = localStorage.getItem('darkMode') === 'true' || 
+                   (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+        const toggle = document.getElementById('darkModeToggle');
+        if (toggle) {
+            toggle.querySelector('span').textContent = 'light_mode';
+        }
+    } else {
+        document.documentElement.classList.remove('dark');
+        const toggle = document.getElementById('darkModeToggle');
+        if (toggle) {
+            toggle.querySelector('span').textContent = 'dark_mode';
+        }
+    }
+}
+
+const darkModeToggle = document.getElementById('darkModeToggle');
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', isDark);
+        darkModeToggle.querySelector('span').textContent = isDark ? 'light_mode' : 'dark_mode';
+    });
+}
+
+// Initialize dark mode
+initDarkMode();
 
 // Initialize
 updateAnalyzeButton();
