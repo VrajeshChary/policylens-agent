@@ -377,10 +377,10 @@ Analyze the policy document."""
             logger.debug(f"Using temperature constraint: {TEMPERATURE} (applied via deterministic rules)")
             
             try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                    config=config
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                        config=config
                 )
             except Exception as api_error:
                 error_str = str(api_error)
