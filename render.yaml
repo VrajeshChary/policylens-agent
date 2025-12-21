@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: policylens-agent
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLE_CLOUD_PROJECT
+        sync: false
+      - key: VERTEX_AI_LOCATION
+        value: us-central1
+      - key: GCS_BUCKET_NAME
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+

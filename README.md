@@ -56,16 +56,17 @@ pip install -r requirements.txt
 
 3. Set up environment variables:
 ```bash
-export GOOGLE_CLOUD_PROJECT=your-project-id
-export VERTEX_AI_LOCATION=us-central1
-export GCS_BUCKET_NAME=your-bucket-name
+export GEMINI_API_KEY=your-gemini-api-key
+export GOOGLE_CLOUD_PROJECT=your-project-id  # Optional
+export VERTEX_AI_LOCATION=us-central1  # Optional
+export GCS_BUCKET_NAME=your-bucket-name  # Optional
 ```
 
 ### Usage
 
 1. Start the FastAPI server:
 ```bash
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 ```
 
 2. Upload a policy document (PDF) and demographic data (CSV) through the API or UI
@@ -76,6 +77,32 @@ uvicorn main:app --reload
    - Identify affected populations
    - Assess risk levels
    - Generate mitigation recommendations
+
+## 🌐 Deployment
+
+### Deploy on Render
+
+PolicyLens is ready to deploy on Render! Follow these steps:
+
+1. **Set up Git repository** (if not already done):
+   - See `GIT_SETUP.md` for detailed instructions
+   - Push your code to GitHub
+
+2. **Deploy on Render**:
+   - See `DEPLOYMENT.md` for complete deployment guide
+   - Quick start: Connect your GitHub repo to Render and deploy!
+
+3. **Required Environment Variables**:
+   - `GEMINI_API_KEY`: Your Google Gemini API key (required)
+
+The project includes:
+- ✅ `Dockerfile` for Docker deployment
+- ✅ `render.yaml` for Render Blueprint deployment
+- ✅ All necessary configuration files
+
+For detailed instructions, see:
+- [Git Setup Guide](GIT_SETUP.md)
+- [Deployment Guide](DEPLOYMENT.md)
 
 ## 📁 Project Structure
 
