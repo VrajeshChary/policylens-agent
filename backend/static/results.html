@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+
+<!-- Favicon -->
+<link rel="icon" href="policy lens.png" type="image/x-icon">
+<link rel="icon" type="image/png" sizes="32x32" href="policy lens.png">
+<link rel="icon" type="image/png" sizes="16x16" href="policy lens.png">
+<link rel="apple-touch-icon" sizes="180x180" href="policy lens.png">
+
+<title>PolicyLens - Analysis Results</title>
+
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#4285F4",
+                    "g-red": "#EA4335",
+                    "g-yellow": "#FBBC05",
+                    "g-green": "#34A853",
+                    "background-light": "#ffffff",
+                    "background-dark": "#202124",
+                    "surface-light": "#f8f9fa",
+                },
+                fontFamily: {
+                    "display": ["Inter", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "3xl": "2.5rem", "full": "9999px"},
+            },
+        },
+    }
+</script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-[#202124] dark:text-white overflow-x-hidden transition-colors duration-300">
+<div class="fixed inset-0 -z-10 h-full w-full overflow-hidden pointer-events-none">
+<div class="absolute -top-[10%] -left-[10%] h-[50vh] w-[50vh] rounded-full bg-primary/20 blur-[120px] dark:bg-primary/10"></div>
+<div class="absolute top-[10%] right-[10%] h-[40vh] w-[40vh] rounded-full bg-g-red/15 blur-[100px] dark:bg-g-red/10"></div>
+<div class="absolute bottom-[20%] left-[10%] h-[40vh] w-[40vh] rounded-full bg-g-yellow/15 blur-[100px] dark:bg-g-yellow/10"></div>
+<div class="absolute -bottom-[10%] right-[20%] h-[50vh] w-[50vh] rounded-full bg-g-green/15 blur-[120px] dark:bg-g-green/10"></div>
+</div>
+<div class="relative flex min-h-screen flex-col">
+<header class="w-full px-6 py-4 lg:px-12 sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-[#202124]/80 border-b border-gray-100 dark:border-white/10">
+<div class="mx-auto flex max-w-7xl items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm">
+    <img src="policy lens.png" alt="PolicyLens" class="h-10 w-10">
+</div>
+<h2 class="text-2xl font-bold tracking-tight text-[#202124] dark:text-white">
+<span>PolicyLens</span>
+</h2>
+</div>
+<div class="flex items-center gap-4">
+<a href="index.html" class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">
+    <span class="material-symbols-outlined text-lg">arrow_back</span>
+    Back to Upload
+</a>
+</div>
+</header>
+<main class="flex flex-1 flex-col items-center justify-center px-4 py-8 lg:px-8">
+<div class="relative w-full max-w-5xl">
+<div class="relative overflow-hidden rounded-3xl border border-white/60 bg-white/60 shadow-[0_8px_32px_0_rgba(66,133,244,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#202124]/60 dark:shadow-none p-6 md:p-8 lg:p-10">
+<div class="absolute top-0 right-0 -mt-10 -mr-10 h-32 w-32 rounded-full bg-gradient-to-br from-g-red/20 to-g-yellow/20 blur-2xl"></div>
+<div class="absolute bottom-0 left-0 -mb-10 -ml-10 h-32 w-32 rounded-full bg-gradient-to-tr from-primary/20 to-g-green/20 blur-2xl"></div>
+<div class="relative z-10">
+<h1 class="text-3xl font-bold mb-6 text-[#202124] dark:text-white">Analysis Results</h1>
+
+<div id="loadingSpinner" class="text-center py-12 hidden">
+  <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  <p class="mt-4 text-gray-600 dark:text-gray-400">Loading results...</p>
+</div>
+
+<div id="resultsContent" class="space-y-4"></div>
+
+<div id="errorMessage" class="hidden p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+  <p class="text-red-800 dark:text-red-200 font-medium"></p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="w-full py-6 text-center border-t border-gray-100 dark:border-white/5 mt-auto bg-surface-light dark:bg-[#202124]">
+<p class="text-sm font-medium text-gray-500 dark:text-gray-400"></p>
+</footer>
+</div>
+
+<script>
+const loadingSpinner = document.getElementById("loadingSpinner");
+const resultsContent = document.getElementById("resultsContent");
+const errorMessage = document.getElementById("errorMessage");
+
+function showError(message) {
+    errorMessage.querySelector("p").textContent = message;
+    errorMessage.classList.remove("hidden");
+    loadingSpinner.classList.add("hidden");
+}
+
+function loadResults() {
+    const storedData = sessionStorage.getItem('analysisResults');
+    
+    if (!storedData) {
+        showError("No analysis results found. Please go back and run an analysis.");
+        return;
+    }
+    
+    try {
+        const data = JSON.parse(storedData);
+        displayResults(data);
+    } catch (e) {
+        console.error("Error parsing stored results:", e);
+        showError("Error loading analysis results. Please try again.");
+    }
+}
+
+function displayResults(data) {
+    loadingSpinner.classList.add("hidden");
+    let html = "";
+    
+    if (!data || (!data.reasoning_summary && (!data.affected_groups || data.affected_groups.length === 0) && (!data.mitigations || data.mitigations.length === 0))) {
+        html += `
+            <div class="p-5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                <h3 class="text-lg font-bold mb-2 text-yellow-900 dark:text-yellow-100">No Results</h3>
+                <p class="text-yellow-800 dark:text-yellow-200 leading-relaxed">The analysis completed but no results were returned.</p>
+            </div>
+        `;
+        resultsContent.innerHTML = html;
+        return;
+    }
+    
+    // Reasoning Summary
+    if (data.reasoning_summary) {
+        html += `
+            <div class="p-5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <h3 class="text-lg font-bold mb-3 text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <span class="material-symbols-outlined">summarize</span>
+                    Summary
+                </h3>
+                <p class="text-blue-800 dark:text-blue-200 leading-relaxed">${data.reasoning_summary}</p>
+            </div>
+        `;
+    }
+    
+    // Affected Groups
+    if (data.affected_groups && data.affected_groups.length > 0) {
+        html += `
+            <div class="p-5 rounded-xl bg-white dark:bg-[#303134] border border-gray-200 dark:border-white/10">
+                <h3 class="text-xl font-bold mb-4 text-[#202124] dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined">groups</span>
+                    Affected Groups
+                </h3>
+                <div class="space-y-3">
+        `;
+        
+        data.affected_groups.forEach((group, index) => {
+            const riskColor = getRiskColor(group.risk_level);
+            html += `
+                <div class="p-4 rounded-lg border ${riskColor.border} ${riskColor.bg}">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-bold text-lg ${riskColor.text}">${group.group || `Group ${index + 1}`}</h4>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${riskColor.badge}">
+                            ${group.risk_level || "Unknown"}
+                        </span>
+                    </div>
+                    ${group.regions && group.regions.length > 0 ? `
+                        <div class="mt-2">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Regions:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${group.regions.map(region => `
+                                    <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">${region}</span>
+                                `).join("")}
+                            </div>
+                        </div>
+                    ` : ""}
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Mitigations
+    if (data.mitigations && data.mitigations.length > 0) {
+        html += `
+            <div class="p-5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                <h3 class="text-xl font-bold mb-4 text-green-900 dark:text-green-100 flex items-center gap-2">
+                    <span class="material-symbols-outlined">shield</span>
+                    Recommended Mitigations
+                </h3>
+                <ul class="space-y-2">
+        `;
+        
+        data.mitigations.forEach((mitigation, index) => {
+            html += `
+                <li class="flex items-start gap-3">
+                    <span class="text-green-600 dark:text-green-400 font-bold mt-0.5">${index + 1}.</span>
+                    <span class="text-green-800 dark:text-green-200 flex-1">${mitigation}</span>
+                </li>
+            `;
+        });
+        
+        html += `
+                </ul>
+            </div>
+        `;
+    }
+    
+    resultsContent.innerHTML = html;
+}
+
+function getRiskColor(riskLevel) {
+    const risk = (riskLevel || "").toLowerCase();
+    if (risk === "high") {
+        return {
+            border: "border-red-300 dark:border-red-700",
+            bg: "bg-red-50 dark:bg-red-900/20",
+            text: "text-red-900 dark:text-red-100",
+            badge: "bg-red-500 text-white"
+        };
+    } else if (risk === "medium") {
+        return {
+            border: "border-yellow-300 dark:border-yellow-700",
+            bg: "bg-yellow-50 dark:bg-yellow-900/20",
+            text: "text-yellow-900 dark:text-yellow-100",
+            badge: "bg-yellow-500 text-white"
+        };
+    } else {
+        return {
+            border: "border-green-300 dark:border-green-700",
+            bg: "bg-green-50 dark:bg-green-900/20",
+            text: "text-green-900 dark:text-green-100",
+            badge: "bg-green-500 text-white"
+        };
+    }
+}
+
+// Load results on page load
+loadResults();
+</script>
+
+</body>
+</html>
+
