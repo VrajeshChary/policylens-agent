@@ -332,12 +332,13 @@ async def analyze_policy(
                 except Exception as e:
                     logger.warning(f"Failed to delete temp file {tmp_path}: {e}")
 
-# Mount static files - must be last to avoid route conflicts
+# Mount static files - check public directory first, fallback to backend/static
 script_dir = os.path.dirname(os.path.abspath(__file__))
 static_path = os.path.join(script_dir, "static")
+public_path = os.path.join(os.path.dirname(script_dir), "public")
 
-# Verify static directory exists
-if os.path.exists(static_path):
-    app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
+target_static = public_path if os.path.exists(public_path) else static_path
+if os.path.exists(target_static):
+    app.mount("/", StaticFiles(directory=target_static, html=True), name="static")
 else:
-    print(f"⚠️ Warning: Static directory not found at {static_path}")
+    logger.warning(f"Static directory not found at {target_static}")
