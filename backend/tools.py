@@ -63,8 +63,8 @@ def generate_demographic_summary(df: pd.DataFrame) -> str:
         if income_col and df[income_col].dtype in ['int64', 'float64']:
             avg_income = df[income_col].mean()
             median_income = df[income_col].median()
-            summary_parts.append(f"Average income: ₹{avg_income:,.0f}")
-            summary_parts.append(f"Median income: ₹{median_income:,.0f}")
+            summary_parts.append(f"Average income: INR {avg_income:,.0f}")
+            summary_parts.append(f"Median income: INR {median_income:,.0f}")
     
     # Education levels
     if any('education' in col or 'literacy' in col or 'literate' in col for col in columns):

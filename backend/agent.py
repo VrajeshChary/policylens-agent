@@ -19,18 +19,16 @@ logger = logging.getLogger(__name__)
 
 class PolicyImpactAgent:
     def __init__(self):
-        # Try to get API key from environment, then config, then fallback
+        # Load API key strictly from environment or config
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        
         if not api_key:
-            # Fallback to default key
-            api_key = "AIzaSyCbHA6CN3Y1HBxyDGnUNLzxopikeuW1hfg"
-            logger.info("Using default API key. Set GEMINI_API_KEY environment variable to use a different key.")
-        else:
-            logger.info("Using API key from environment variable")
+            raise ValueError(
+                "GEMINI_API_KEY is not configured. Please set GEMINI_API_KEY in your environment or .env file."
+            )
+        logger.info("Initialized PolicyImpactAgent with environment API key")
             
         self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
         
         # Deterministic rules for risk assessment
         self.deterministic_rules = {
@@ -380,7 +378,7 @@ Analyze the policy document."""
                 response = self.client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
-                        config=config
+                    config=config
                 )
             except Exception as api_error:
                 error_str = str(api_error)
